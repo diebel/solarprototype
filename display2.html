@@ -1,0 +1,262 @@
+<html>
+<head>
+<title>Solar Panel Status</title>
+
+<script type="text/javascript">
+	var data;
+	var SupervisorSN = ["ZT210985000549A1035"];
+
+	var ProductionMeterSN = ["PVS6M21091035p"];
+	var ConsumptionMeterSN = ["PVS6M21091035c"];
+	
+	// panels left to right, top to bottom
+	var PanelSN_SE = 
+	["E00122116057909",
+	"E00122116051757",
+	"E00122116062587",
+	"E00122116051886",
+	"E00122116064191",
+	"E00122116063300",
+	"E00122116050766",
+	"E00122116047592"];
+	
+	var PanelSN_SW =
+	["E00122116062546",
+	"E00122116048063",	
+	"E00122116064146",
+ 	"E00122116048060",	
+	"E00122116061866",
+	"E00122116058601",
+	"E00122116020730",
+	//"E00122116061683",
+	"E00122116064338",
+	"E00122116048101",
+	"E00122116063062"];
+
+	var PanelSN_All = [ PanelSN_SE, PanelSN_SW ].flat();
+	
+	async function loadData() {
+		// load data from URL: http://www.sunpowerconsole.com/cgi-bin/dl_cgi?Command=DeviceList
+		
+		let response = await fetch('http://172.27.153.1/cgi-bin/dl_cgi?Command=DeviceList');
+		data = await response.json();
+				
+		fillPanelData();
+		fillPanelStats();	
+	}
+	
+	function PanelId(PanelSN) {
+		if (data != null && data !== undefined) {
+			for (var i = 0 in data.devices) {
+				if (data.devices[i].SERIAL == PanelSN) return i;
+			}
+		}
+		return null;
+	}
+	
+	function fillPanelData() {
+		if (data != null && data !== undefined) {
+			for (var i = 0 in PanelSN_All) {
+				var id = PanelId(PanelSN_All[i]);
+				
+				if (id != null) {
+					document.getElementById('panel'+i)
+			        .innerHTML='State: ' + data.devices[id].STATE + '<BR>' + 'Power: ' + (data.devices[id].p_3phsum_kw*1000).toLocaleString(
+						undefined, { minimumFractionDigits: 1 }) + ' W' + '<BR>' + 'SN: ' + data.devices[id].SERIAL;
+					
+					// mark any errors	
+					if (data.devices[id].STATE != "working") { document.getElementById('panel'+i).style.color = "red"; } 
+					else { document.getElementById('panel'+i).style.color = "black"; }				
+				}
+			}
+		}
+	}
+	
+	function fillPanelStats() {
+		if (data != null && data !== undefined) {
+			document.getElementById('Date').innerHTML=data.devices[0].DATATIME;
+			
+			document.getElementById('ProductionMeterPower').innerHTML=TotalArrayPower(ProductionMeterSN).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+			document.getElementById('ConsumptionMeterPower').innerHTML=TotalArrayPower(ConsumptionMeterSN).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+			
+			document.getElementById('TotalArrayPower_SE').innerHTML=TotalArrayPower(PanelSN_SE).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+			document.getElementById('AveragePanelPower_SE').innerHTML=AveragePanelPower(PanelSN_SE).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';											
+			document.getElementById('MinPanelPower_SE').innerHTML=MinPanelPower(PanelSN_SE).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+			document.getElementById('MaxPanelPower_SE').innerHTML=MaxPanelPower(PanelSN_SE).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+						
+			document.getElementById('TotalArrayPower_SW').innerHTML=TotalArrayPower(PanelSN_SW).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+			document.getElementById('AveragePanelPower_SW').innerHTML=AveragePanelPower(PanelSN_SW).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+			document.getElementById('MinPanelPower_SW').innerHTML=MinPanelPower(PanelSN_SW).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+			document.getElementById('MaxPanelPower_SW').innerHTML=MaxPanelPower(PanelSN_SW).toLocaleString(
+						undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' W';
+		}
+	}
+	
+	function TotalArrayPower(PanelSN) {
+		var total = 0;
+		for (var i = 0 in PanelSN) {
+			var id = PanelId(PanelSN[i]);
+			
+			if (id != null && data.devices[id].p_3phsum_kw !== undefined ) {
+				total += parseFloat(data.devices[id].p_3phsum_kw*1000);
+			}
+		}
+		return total;
+	}
+
+	function AveragePanelPower(PanelSN) {
+		var sum = 0;
+		var count = 0;
+		for (var i = 0 in PanelSN) {
+			var id = PanelId(PanelSN[i]);
+			
+			if (id != null && data.devices[id].p_3phsum_kw !== undefined ) {
+				var p = parseFloat(data.devices[id].p_3phsum_kw*1000);				
+				sum += p;
+			}
+			count++;
+		}
+		return (1.0*sum/count);
+	}
+
+	function MinPanelPower(PanelSN) {
+		var min;
+		for (var i = 0 in PanelSN) {
+			var id = PanelId(PanelSN[i]);
+			
+			if (id != null && data.devices[id].p_3phsum_kw !== undefined ) {
+				var p = parseFloat(data.devices[id].p_3phsum_kw*1000);
+				
+				if (i==0) { min = p; }
+				
+				if (min>p) { min = p; } 
+			} else {
+				min = 0;
+			}
+		}
+		return min;
+	}
+
+	function MaxPanelPower(PanelSN) {
+		var max;
+		for (var i = 0 in PanelSN) {
+			var id = PanelId(PanelSN[i]);
+			
+			if (id != null && data.devices[id].p_3phsum_kw !== undefined ) {
+				var p = parseFloat(data.devices[id].p_3phsum_kw*1000);
+				
+				if (i==0) { max = p; }
+				
+				if (max<p) { max = p; } 
+			}
+		}
+		return max;
+	}
+
+</script>
+
+</head>
+<body>
+
+<p>
+Panel data: <button onClick="loadData()">Query</button> or <input type="file" name="inputfile" id="inputfile">
+</p>
+
+<script type="text/javascript">
+	//var data;
+    document.getElementById('inputfile')
+        .addEventListener('change', function() {
+          
+        var fr=new FileReader();
+        fr.onload=function(){
+            document.getElementById('output')
+                    .textContent=fr.result;
+			data = JSON.parse(fr.result);
+			
+			fillPanelData();
+			fillPanelStats();
+        }      
+        fr.readAsText(this.files[0]);
+    })
+</script>
+
+<p>
+<table border=0>
+	<tr><td>Date:</td><td id="Date"></td></tr>
+	<tr><td>Production Meter Power:</td><td id="ProductionMeterPower"></td></tr>
+	<tr><td>Consumption Meter Power:</td><td id="ConsumptionMeterPower"></td></tr>
+</table>
+</p>
+
+<h1>Solar Array SE</h1>
+<p>
+<table border=0>
+	<tr><td>Total Array Power:</td><td id="TotalArrayPower_SE"></td></tr>
+	<tr><td>Average Panel Power:</td><td id="AveragePanelPower_SE"></td></tr>
+	<tr><td>Min Panel Power:</td><td id="MinPanelPower_SE"></td></tr>
+	<tr><td>Max Panel Power:</td><td id="MaxPanelPower_SE"></td></tr>
+</table>
+</p>
+
+<p>
+<table style="width:100%" border=1>
+<tr>
+	<td id="panel0">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel1">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel2">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel3">State: tbd<br>Power: tbd<br>SN: tbd</td>
+</tr>	
+<tr>
+	<td id="panel4">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel5">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel6">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel7">State: tbd<br>Power: tbd<br>SN: tbd</td>
+</tr>
+</table>
+</p>
+
+<h1>Solar Array SW</h1>
+<p>
+<table border=0>
+	<tr><td>Total Array Power:</td><td id="TotalArrayPower_SW"></td></tr>
+	<tr><td>Average Panel Power:</td><td id="AveragePanelPower_SW"></td></tr>
+	<tr><td>Min Panel Power:</td><td id="MinPanelPower_SW"></td></tr>
+	<tr><td>Max Panel Power:</td><td id="MaxPanelPower_SW"></td></tr>
+</table>
+</p>
+
+<p>
+<table style="width:100%" border=1>
+<tr>
+	<td id="panel8">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel9">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel10">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel11">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel12">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel13">State: tbd<br>Power: tbd<br>SN: tbd</td>
+</tr>	
+<tr>
+	<td></td>
+	<td id="panel14">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel15">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel16">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td id="panel17">State: tbd<br>Power: tbd<br>SN: tbd</td>
+	<td></td>
+</tr>
+</table>
+</p>
+
+<div></div>
+<pre id="output" hidden></pre>
+
+</body>
+</html>
