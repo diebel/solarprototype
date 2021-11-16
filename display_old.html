@@ -1,0 +1,84 @@
+<html>
+<head>
+<script type="text/javascript">
+	//var fr=new FileReader();
+	//fr.readAsText('data.json');
+
+	//var txt = '{"name":"John"}'
+	//const obj = JSON.parse(txt)
+	var obj;
+	
+	
+</script>
+
+</head>
+<body>
+<p>
+	<input type="file" name="inputfile" id="inputfile">
+</p>
+   
+		
+    <script type="text/javascript">
+        document.getElementById('inputfile')
+            .addEventListener('change', function() {
+              
+            var fr=new FileReader();
+            fr.onload=function(){
+                document.getElementById('output')
+                        .textContent=fr.result;
+            }
+              
+            fr.readAsText(this.files[0]);
+			obj = JSON.parse(fr.result);
+        })
+    </script>
+	
+<p>Date: 9/3/2021 3:21pm</p>
+
+<h1>Solar Array SE</h1>
+
+Total: 1.8kW
+
+<table style="width:100%" border=1>
+<tr>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+</tr>	
+<tr>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+</tr>
+</table>
+
+
+<h1>Solar Array SW</h1>
+
+Total: 1.8kW
+
+<table style="width:100%" border=1>
+<tr>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+</tr>	
+<tr>
+<td></td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td>State: Working<br>Power: 239W<br>SN: E00122116063062</td>
+<td></td>
+</tr>
+</table>
+
+<pre id="output"></pre>
+
+</body>
+</html>
